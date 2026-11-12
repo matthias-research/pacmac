@@ -1,0 +1,12 @@
+.local/
+.wrangler/
+node_modules/
+__pycache__/
+original/
+analysis/
+# Keep the downloadable standalone HTML; omit its identical deployment copy.
+dist/site/
+# Local resource-recovery tools depend on the excluded original installation.
+tools/AnalyzePacMac.java
+tools/extract-assets.py
+tools/music-render.ps1

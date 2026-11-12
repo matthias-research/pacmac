@@ -1,0 +1,11 @@
+{
+  "name": "pacmac",
+  "account_id": "3284e799074eecac8c8e92478abe1b64",
+  "compatibility_date": "2026-11-11",
+  "workers_dev": true,
+  "build": { "command": "npm run build" },
+  "assets": {
+    "directory": "./dist/site",
+    "not_found_handling": "404-page"
+  }
+}

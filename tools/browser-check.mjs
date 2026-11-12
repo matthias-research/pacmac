@@ -1,0 +1,40 @@
+import fs from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const endpoint=process.env.CDP_URL||'http://127.0.0.1:9247';
+const targets=await fetch(endpoint+'/json').then(r=>r.json());
+const target=targets.find(t=>t.type==='page'&&t.url.startsWith(process.env.CHECK_URL||'http://127.0.0.1:4185'));
+assert.ok(target,'Open http://127.0.0.1:4185 in the debug browser first.');
+const ws=new WebSocket(target.webSocketDebuggerUrl);await new Promise(r=>ws.addEventListener('open',r,{once:true}));
+let id=0;const pending=new Map(),errors=[];
+ws.addEventListener('message',e=>{const m=JSON.parse(e.data);if(m.id){const p=pending.get(m.id);pending.delete(m.id);m.error?p.reject(Error(JSON.stringify(m.error))):p.resolve(m.result);}if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails.exception?.description||m.params.exceptionDetails.text);});
+const send=(method,params={})=>new Promise((resolve,reject)=>{const n=++id;pending.set(n,{resolve,reject});ws.send(JSON.stringify({id:n,method,params}));});
+const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true,userGesture:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result.value;};
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
+async function shot(name){await pause(100);const r=await send('Page.captureScreenshot',{format:'png'});await fs.writeFile(`analysis/browser/${name}.png`,Buffer.from(r.data,'base64'));}
+let storedCustom;
+try{
+ await fs.mkdir('analysis/browser',{recursive:true});await send('Runtime.enable');await send('Page.enable');await send('Page.bringToFront');await send('Emulation.setDeviceMetricsOverride',{width:1024,height:768,deviceScaleFactor:1,mobile:false});await send('Page.reload');
+ for(let i=0;i<100;i++){if(await evaluate('!!window.pacmac'))break;await pause(100);}assert.ok(await evaluate('!!window.pacmac'));
+ storedCustom=await evaluate('localStorage.getItem("pacmac.custom")');
+ assert.deepEqual(await evaluate('[pacmac.library.sets.length,pacmac.library.sets.reduce((n,s)=>n+s.levels.length,0)]'),[117,2332]);
+ await shot('title');
+ await evaluate('pacmac.action("play")');assert.equal(await evaluate('pacmac.game.state'),'ready');await shot('ready');
+ await send('Input.dispatchKeyEvent',{type:'keyDown',key:'ArrowUp',code:'ArrowUp',windowsVirtualKeyCode:38});await send('Input.dispatchKeyEvent',{type:'keyUp',key:'ArrowUp',code:'ArrowUp',windowsVirtualKeyCode:38});await pause(600);
+ const moving=await evaluate('pacmac.getState()');assert.ok(moving.score>0,'keyboard movement must eat food');assert.ok(moving.player.y<8);await shot('gameplay');
+ await evaluate('pacmac.action("pause")');const frozen=await evaluate('JSON.stringify(pacmac.game.player)');await pause(250);assert.equal(await evaluate('JSON.stringify(pacmac.game.player)'),frozen);assert.equal(await evaluate('pacmac.game.state'),'paused');
+ await evaluate('pacmac.action("preferences")');assert.ok(await evaluate('document.querySelector("dialog").open'));await shot('preferences');await evaluate('document.querySelector("#pref-speed").value=60;document.querySelector("#dialog-buttons button:last-child").click()');assert.equal(await evaluate('pacmac.getState().settings.speed'),60);
+ await evaluate('pacmac.action("preferences");document.querySelector("#pref-speed").value=30;document.querySelector("#dialog-buttons button:last-child").click()');
+ await evaluate('pacmac.action("levels")');assert.equal(await evaluate('document.querySelector("#level-set").options.length'),117);await shot('levels');await evaluate('document.querySelector("#level-number").value=2;document.querySelector("#dialog-buttons button:last-child").click()');assert.equal(await evaluate('pacmac.game.levelNumber'),2);
+ await evaluate('pacmac.action("editor")');await shot('editor');
+ const original=await evaluate('pacmac.editor().tiles[0]');await send('Input.dispatchMouseEvent',{type:'mousePressed',x:120,y:130,button:'left',clickCount:1});await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:120,y:130,button:'left',clickCount:1});
+ assert.equal(await evaluate('pacmac.editor().tiles[0]'),47);await evaluate('pacmac.action("editorUndo")');assert.equal(await evaluate('pacmac.editor().tiles[0]'),original);
+ await evaluate('pacmac.action("editorTest")');assert.equal(await evaluate('pacmac.getState().view'),'game');await evaluate('pacmac.action("abort")');assert.equal(await evaluate('pacmac.getState().view'),'editor');
+ const imported=await evaluate('({name:"__verification__",levels:[[...pacmac.editor().tiles]]})');imported.levels[0][0]=77;
+ await fs.writeFile('analysis/browser/import-check.json',JSON.stringify(imported));
+ await evaluate('pacmac.action("editorImport")');const {root}=await send('DOM.getDocument');const {nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector:'#import-file'});await send('DOM.setFileInputFiles',{nodeId,files:[new URL('../analysis/browser/import-check.json',import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/,'')]});await evaluate('document.querySelector("#dialog-buttons button:last-child").click()');await pause(100);assert.equal(await evaluate('pacmac.editor().tiles[0]'),77);assert.equal(await evaluate('document.querySelector("dialog").open'),false);
+ await evaluate('pacmac.action("editorSave");document.querySelector("#dialog-buttons button:last-child").click()');assert.ok(await evaluate('JSON.parse(localStorage.getItem("pacmac.custom")).some(s=>s.name==="__verification__")'));
+ const audio=await evaluate(`(async()=>{const asset=p=>globalThis.__PACMAC_BUNDLE__?.files[p]||p;const c=new AudioContext();const result=[];for(const [name,s] of Object.entries(pacmac.assets.sounds)){const b=await c.decodeAudioData(await fetch(asset(s.url)).then(r=>r.arrayBuffer()));result.push({name,duration:b.duration});}await c.close();const tracks=[];for(const url of ['dlaczego','4aces','uralvolga']){const a=new Audio(asset('assets/music/'+url+'.ogg'));await new Promise((resolve,reject)=>{a.onloadedmetadata=resolve;a.onerror=()=>reject(Error('Audio failed:'+url));});tracks.push({name:url,duration:a.duration});a.src='';}return {sounds:result,tracks};})()`);assert.equal(audio.sounds.length,12);assert.ok(audio.tracks.every(t=>t.duration>100));
+ await evaluate('pacmac.action("home");pacmac.action("levels");document.querySelector("#level-set").value="Pac Levels";document.querySelector("#level-number").value=1;document.querySelector("#dialog-buttons button:last-child").click();pacmac.action("home")');
+ await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await shot('mobile');assert.ok(await evaluate('document.querySelector("#screen").getBoundingClientRect().right<=innerWidth+1'));
+ assert.deepEqual(errors,[]);await fs.writeFile('analysis/browser/check-results.json',JSON.stringify({status:'passed',moving,audio,errors},null,2));console.log('Browser checks passed: title, keyboard gameplay, pause, preferences, levels, editor, audio, mobile layout.');
+}finally{if(storedCustom!==undefined)await evaluate(storedCustom===null?'localStorage.removeItem("pacmac.custom")':`localStorage.setItem("pacmac.custom",${JSON.stringify(storedCustom)})`).catch(()=>{});await send('Emulation.clearDeviceMetricsOverride').catch(()=>{});ws.close();}

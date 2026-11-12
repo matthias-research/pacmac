@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><title>PacMac Deluxe</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<main id="screen" aria-label="PacMac Deluxe">
+  <canvas id="game" width="1024" height="768" aria-label="PacMac Deluxe game board"></canvas>
+  <div id="hotspots"></div>
+  <nav id="menubar" aria-label="Game menus" hidden>
+    <button data-action="about" aria-label="About PacMac">●</button>
+    <details><summary>Game</summary><div><button data-action="play">New Game <kbd>Enter</kbd></button><button data-action="pause">Pause / Resume <kbd>P</kbd></button><button data-action="abort">Abort Game <kbd>Esc</kbd></button><hr><button data-action="scores">Hall Of Fame</button><button data-action="home">Main Menu</button></div></details>
+    <details><summary>Options</summary><div><button data-action="preferences">Preferences…</button><button data-action="levels">Sequential Play…</button><button data-action="random">Random Play</button><hr><button data-action="fullscreen">Full Screen</button></div></details>
+    <details><summary>Music</summary><div><button data-action="music">Music On / Off</button><button data-action="nextMusic">Play Next</button><button data-action="sound">Sounds On / Off</button></div></details>
+    <button data-action="editor">LevelEditor</button>
+    <span id="menu-status">PacMac Deluxe</span>
+  </nav>
+  <div id="loading" role="status">Loading PacMac Deluxe…</div>
+  <div id="touch" aria-label="Touch controls"><button data-dir="up" aria-label="Move up">↑</button><button data-dir="left" aria-label="Move left">←</button><button data-dir="down" aria-label="Move down">↓</button><button data-dir="right" aria-label="Move right">→</button><button data-action="pause" aria-label="Pause">Ⅱ</button><button data-action="menu" aria-label="Show menu">☰</button></div>
+</main>
+<dialog id="dialog"><form method="dialog"><header id="dialog-title"></header><div id="dialog-content"></div><footer id="dialog-buttons"></footer></form></dialog>
+<script type="module" src="src/app.js"></script>
+</body></html>
