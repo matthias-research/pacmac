@@ -6,7 +6,7 @@ Play online: **https://pacmac.matthi3010.workers.dev**
 
 ## Two versions
 
-- **Standalone:** download `dist/PacMac Deluxe.html` and open it in a browser. This approximately 13.1 MB file includes all code, levels, images, and audio. It works offline without a server.
+- **Standalone:** download `dist/PacMac Deluxe.html` and open it in a browser. This approximately 18.4 MB file includes all code, levels, images, and audio. It works offline without a server.
 - **Separate files:** `index.html`, `styles.css`, `src/`, `data/`, and `assets/` contain the same game in editable form. Run `npm start`, then open **http://localhost:4185**. No npm dependencies are required; use Node.js 22 or later.
 
 Music starts after your first click or key press. Browser preferences, custom levels, and high scores are saved locally and may differ between the two versions.
@@ -14,11 +14,33 @@ Music starts after your first click or key press. Browser preferences, custom le
 ## Controls and features
 
 - Arrow keys move; WASD also works with default controls.
+- Drag the rounded diamond joystick to the right of the board with mouse or touch. Slide between directions without lifting; release recenters the thumb while PacMac keeps moving.
 - **P** pauses, **Esc** returns to the menu, **Space** shows the menu bar.
 - **Options > Sequential Play** selects a level file and starting level; random play is available too.
 - Preferences configure keys, music, sound effects, volume, and original-style game speed (25-100 fps; normal 30).
 - **Music > Play Next** switches between the three original tracks.
 - The level editor supports drawing, right-click erasing, Alt-click tile selection, undo, testing, local saves, and JSON import/export. Esc returns from testing to the editor. Export custom levels for a portable backup.
+
+## Graphics variants
+
+Enhanced 2× artwork is the default. All 14 original PNGs are retained unchanged; their enhanced counterparts are in `assets/enhanced/`. Both sets are included in the standalone HTML. There is no player-facing graphics selector.
+
+For internal comparisons, use the browser console:
+
+```js
+pacmac.graphics.setMode('original');
+pacmac.graphics.setMode('enhanced');
+```
+
+Switching updates gameplay, bitmap text, the editor and level previews without resetting game state. To select the original mode on subsequent loads, run `localStorage.setItem('pacmac.graphics', JSON.stringify('original'))`; remove that key to restore the default.
+
+The artwork uses the same local Real-ESRGAN x4plus workflow as SWS Platinum: neural 4× enlargement followed by Lanczos downsampling to 2×. Sprites and glyphs are processed with isolated padding; original alpha coverage is preserved at 2×. Provenance, dimensions and SHA-256 checksums are recorded in `data/enhanced.json`. To regenerate with Python, Pillow and the Real-ESRGAN NCNN Vulkan executable/model installed:
+
+```sh
+python tools/enhance-assets.py --tool-dir D:/GIT/SWS-platin/artifacts/upscale-tools/realesrgan
+```
+
+The model and executable are build-time tools only and are not included in the game.
 
 ## Build, test, and deploy
 
@@ -43,6 +65,7 @@ Optional Chrome CDP checks:
 
 ```sh
 node tools/browser-check.mjs
+node tools/joystick-check.mjs
 node tools/audio-playback-check.mjs
 ```
 

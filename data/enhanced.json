@@ -1,0 +1,246 @@
+{
+  "model": "RealESRGAN_x4plus",
+  "tool": "realesrgan-ncnn-vulkan-20220424-windows",
+  "modelSha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf",
+  "method": "isolated padded cells, neural 4x, Lanczos downsample to 2x",
+  "images": [
+    {
+      "source": "assets/sprites-a.png",
+      "image": "assets/enhanced/sprites-a.png",
+      "scale": 2,
+      "sourceSize": [
+        448,
+        588
+      ],
+      "outputSize": [
+        896,
+        1176
+      ],
+      "cells": 323,
+      "sourceSha256": "a6c637db3e689d23ef81cca87ffc3c01c8408b7adb438366644fa365bbbf9464",
+      "outputSha256": "a2623a862e8620bf060ac11d82bc1af0c59fbf3afbab2ac8a24778edf9d42960",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/sprites-b.png",
+      "image": "assets/enhanced/sprites-b.png",
+      "scale": 2,
+      "sourceSize": [
+        576,
+        756
+      ],
+      "outputSize": [
+        1152,
+        1512
+      ],
+      "cells": 323,
+      "sourceSha256": "5678e1eb907fa365ac8bafbe7365d9b2372ec212a188b54ffad47976af81c084",
+      "outputSha256": "0a3872969559a9ba11ba3b82ecfedd5488aee46be2fb6d82a8a984501fe56025",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/maze.png",
+      "image": "assets/enhanced/maze.png",
+      "scale": 2,
+      "sourceSize": [
+        256,
+        80
+      ],
+      "outputSize": [
+        512,
+        160
+      ],
+      "cells": 80,
+      "sourceSha256": "ce4880d0e2eacf19461f8b2122580e34d8b079ab4eb9d3c436080b942d279d72",
+      "outputSha256": "a8d36eded17e106019b65639d7f3ca33d239fd1446c59ca8650a33d9b5725199",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/font-14.png",
+      "image": "assets/enhanced/font-14.png",
+      "scale": 2,
+      "sourceSize": [
+        665,
+        16
+      ],
+      "outputSize": [
+        1330,
+        32
+      ],
+      "cells": 96,
+      "sourceSha256": "fe91268a49597cbd6fc765d8d856b8d52c5464d0d0b27c10ced8dc1431f31b8e",
+      "outputSha256": "05c6496000eacb5ebcf673d560edc58bf14cc9a3752d9b3e07788df7be90c676",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/font-15.png",
+      "image": "assets/enhanced/font-15.png",
+      "scale": 2,
+      "sourceSize": [
+        665,
+        16
+      ],
+      "outputSize": [
+        1330,
+        32
+      ],
+      "cells": 96,
+      "sourceSha256": "5c22fb3214275d201666cb0f6301d63a46b010cda1c21d305571544173d7a017",
+      "outputSha256": "d7b2fa4bac6254240b2dc6f715cac0ec5bdcf9468ee46192bcad2c547a2158e6",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/font-18.png",
+      "image": "assets/enhanced/font-18.png",
+      "scale": 2,
+      "sourceSize": [
+        857,
+        21
+      ],
+      "outputSize": [
+        1714,
+        42
+      ],
+      "cells": 96,
+      "sourceSha256": "7ac8f8104bc79242206a9083ba0faf4226f9433e31546f8b52313bcf851449bd",
+      "outputSha256": "5e46f333853d9508c4f21625124f46f863d4ce64b97ce4f39f34d4814ceab167",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/font-19.png",
+      "image": "assets/enhanced/font-19.png",
+      "scale": 2,
+      "sourceSize": [
+        857,
+        21
+      ],
+      "outputSize": [
+        1714,
+        42
+      ],
+      "cells": 96,
+      "sourceSha256": "b74f0098ae221ba58cf2045ff2631307e0b53c53ed7003aafdcb79bb8467118c",
+      "outputSha256": "b0eedecea8a6e4e096b6915ad552ad74dd75ce1e4ff43d4c32fe2633ebcfae8f",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/font-30.png",
+      "image": "assets/enhanced/font-30.png",
+      "scale": 2,
+      "sourceSize": [
+        1427,
+        35
+      ],
+      "outputSize": [
+        2854,
+        70
+      ],
+      "cells": 96,
+      "sourceSha256": "b3d04ce402cb85412778fa72aa78a3784212c78aae733b6e3e28c0fde8d51388",
+      "outputSha256": "105fc79a92d0fca33b6224022c9ff329968ade066394b6bbb2780e245b04f7fb",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/font-31.png",
+      "image": "assets/enhanced/font-31.png",
+      "scale": 2,
+      "sourceSize": [
+        1427,
+        35
+      ],
+      "outputSize": [
+        2854,
+        70
+      ],
+      "cells": 96,
+      "sourceSha256": "09042b85fc073bc0102f5b1adff86e59e6cc7d09ca82a6b3b9608f36116636fa",
+      "outputSha256": "1926e793769df021503cdfba2d7a2af39f67086daabfc871b7c9abc243ec260c",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/font-36.png",
+      "image": "assets/enhanced/font-36.png",
+      "scale": 2,
+      "sourceSize": [
+        1720,
+        43
+      ],
+      "outputSize": [
+        3440,
+        86
+      ],
+      "cells": 96,
+      "sourceSha256": "ee2c3a49c0e9cf0877a69611f1708f69c9eb4bf11ceb63378fb67360539ad3fe",
+      "outputSha256": "020d515c407e367de34aaad338d8cd0715442f87efce20a7fbe05fdfceb90c56",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/font-37.png",
+      "image": "assets/enhanced/font-37.png",
+      "scale": 2,
+      "sourceSize": [
+        1720,
+        43
+      ],
+      "outputSize": [
+        3440,
+        86
+      ],
+      "cells": 96,
+      "sourceSha256": "e137d07adb5a11969e7a1ffbb81583026e2dc76c6070c6dacab11661e5cc0e05",
+      "outputSha256": "59f7efe3f42ae78d5097bae619660785c383e2552460c7964c50efb5ce132c05",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/title-1000.png",
+      "image": "assets/enhanced/title-1000.png",
+      "scale": 2,
+      "sourceSize": [
+        198,
+        113
+      ],
+      "outputSize": [
+        396,
+        226
+      ],
+      "cells": 1,
+      "sourceSha256": "5d85b8e08b6f1f305c77cdcf40234d21e0600f5c598b55271813739672fc33c6",
+      "outputSha256": "207ea2c11a9f328604cb5731c0516e2664bd55ba8a0a589c26ec8832052581c4",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/title-0.png",
+      "image": "assets/enhanced/title-0.png",
+      "scale": 2,
+      "sourceSize": [
+        372,
+        112
+      ],
+      "outputSize": [
+        744,
+        224
+      ],
+      "cells": 1,
+      "sourceSha256": "2f3571e2bd4a1889efc1f9135ebec8063eedb1945d1e1a068f2cac906a929eab",
+      "outputSha256": "55fdd35199615a9f233ba828faa6f0657b62a2fe86366097b8828e93f5e3fc5a",
+      "alpha": "nearest-neighbour exact coverage"
+    },
+    {
+      "source": "assets/title-1.png",
+      "image": "assets/enhanced/title-1.png",
+      "scale": 2,
+      "sourceSize": [
+        298,
+        144
+      ],
+      "outputSize": [
+        596,
+        288
+      ],
+      "cells": 1,
+      "sourceSha256": "ef556e491f8b4971e97e5482a52858d53838c45eafde7dfb0978ede859865de0",
+      "outputSha256": "cdbffdecb1f7eef3e221a66fdaf81bafb4be5b6445dedb88f76355f05d34a1d1",
+      "alpha": "nearest-neighbour exact coverage"
+    }
+  ]
+}

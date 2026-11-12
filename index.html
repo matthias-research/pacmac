@@ -4,6 +4,9 @@
 <main id="screen" aria-label="PacMac Deluxe">
   <canvas id="game" width="1024" height="768" aria-label="PacMac Deluxe game board"></canvas>
   <div id="hotspots"></div>
+  <div id="joystick" role="group" tabindex="0" aria-label="Movement joystick: drag up, down, left or right, or use arrow keys" hidden>
+    <svg viewBox="0 0 200 200" aria-hidden="true"><rect x="27" y="27" width="146" height="146" rx="30" transform="rotate(45 100 100)" fill="#d9d9d9"/><circle cx="100" cy="100" r="29" fill="#a6a6a6"/></svg>
+  </div>
   <nav id="menubar" aria-label="Game menus" hidden>
     <button data-action="about" aria-label="About PacMac">●</button>
     <details><summary>Game</summary><div><button data-action="play">New Game <kbd>Enter</kbd></button><button data-action="pause">Pause / Resume <kbd>P</kbd></button><button data-action="abort">Abort Game <kbd>Esc</kbd></button><hr><button data-action="scores">Hall Of Fame</button><button data-action="home">Main Menu</button></div></details>
@@ -13,7 +16,7 @@
     <span id="menu-status">PacMac Deluxe</span>
   </nav>
   <div id="loading" role="status">Loading PacMac Deluxe…</div>
-  <div id="touch" aria-label="Touch controls"><button data-dir="up" aria-label="Move up">↑</button><button data-dir="left" aria-label="Move left">←</button><button data-dir="down" aria-label="Move down">↓</button><button data-dir="right" aria-label="Move right">→</button><button data-action="pause" aria-label="Pause">Ⅱ</button><button data-action="menu" aria-label="Show menu">☰</button></div>
+  <div id="touch" aria-label="Touch controls"><button data-action="pause" aria-label="Pause">Ⅱ</button><button data-action="menu" aria-label="Show menu">☰</button></div>
 </main>
 <dialog id="dialog"><form method="dialog"><header id="dialog-title"></header><div id="dialog-content"></div><footer id="dialog-buttons"></footer></form></dialog>
 <script type="module" src="src/app.js"></script>

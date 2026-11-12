@@ -1,12 +1,17 @@
+import {attachJoystick} from './joystick.js';
+import {BitmapGraphics} from './graphics.js';
 import {Game,DIRECTIONS,isFood,isPill,walkable} from './engine.js';
 import {AudioEngine} from './audio.js';
 const $=s=>document.querySelector(s),canvas=$('#game'),ctx=canvas.getContext('2d'),hotspots=$('#hotspots'),dialog=$('#dialog');
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}};
 const save=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));}catch{}};
 let settings={speed:30,volume:.65,music:true,sound:true,waka:true,random:false,set:'Pac Levels',level:0,keys:{up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',pause:'p'},...read('pacmac.preferences',{})};
-let scores=read('pacmac.scores',[]),custom=read('pacmac.custom',[]),assets,library,images={},view='title',hover='',buttons=[],ticks=0,gameTicks=0,accumulator=0,last=0,activeSet,activeLevel=0,editor=null,flash=[],menuVisible=false,currentMusic=2,dialogPaused=false;
+let scores=read('pacmac.scores',[]),custom=read('pacmac.custom',[]),assets,library,graphics,previewRefresh,view='title',hover='',buttons=[],ticks=0,gameTicks=0,accumulator=0,last=0,activeSet,activeLevel=0,editor=null,flash=[],menuVisible=false,currentMusic=2,dialogPaused=false;
 const audio=new AudioEngine();
 const game=new Game({onEvent:event});
+const joystick=attachJoystick($('#joystick'),{direction:dir=>game.direction(dir),unlock:()=>audio.unlock(),enabled:()=>view==='game'&&!dialog.open&&['ready','playing'].includes(game.state)});
+let joystickVisible=false;
+function syncJoystick(){const visible=view==='game';if(visible!==joystickVisible){joystickVisible=visible;$('#screen').classList.toggle('with-joystick',visible);$('#joystick').hidden=!visible;joystick.reset();}if(dialog.open||!['ready','playing'].includes(game.state))joystick.reset();}
 const BOARD={x:152,y:112,size:36};
 const musicNames=["'dlaczego?'",'4aces','UralVolga'];
 const pad=(n,width=7)=>String(n).padStart(width,'0');
@@ -31,13 +36,13 @@ function textWidth(text,size=18){const f=assets?.fonts?.[String(size)];if(!f)ret
 function text(str,x,y,size=18,color='white',align='left'){
   str=String(str).replace(/[–—·]/g,'-').replace(/[’‘]/g,"'");const f=assets?.fonts?.[String(size)];
   if(align==='center')x-=textWidth(str,size)/2;else if(align==='right')x-=textWidth(str,size);
-  if(f&&images[f.image]){
+  if(f&&graphics){
     // Font resources contain the original antialiased glyphs. Red variants are recovered separately when available.
-    const red=assets.fonts[String(Number(size)+1)];const font=color==='red'&&red?red:f;const image=images[font.image]||images[f.image];
-    for(const c of str){const g=font.glyphs[c.codePointAt(0)]||font.glyphs['63'];if(g){ctx.drawImage(image,g.x,g.y,g.w,g.h,Math.round(x),Math.round(y),g.w,g.h);x+=g.advance;}else x+=size*.45;}
+    const red=assets.fonts[String(Number(size)+1)];const font=color==='red'&&red?red:f;
+    for(const c of str){const g=font.glyphs[c.codePointAt(0)]||font.glyphs['63'];if(g){graphics.draw(ctx,font.image,g.x,g.y,g.w,g.h,Math.round(x),Math.round(y),g.w,g.h);x+=g.advance;}else x+=size*.45;}
   }else{ctx.fillStyle=color;ctx.font=`bold ${size}px Arial`;ctx.textBaseline='top';ctx.fillText(str,x,y);}
 }
-function sprite(type,id,x,y,size){const sheet=assets?.sprites[type],s=sheet?.ids[id];if(s&&images[sheet.image])ctx.drawImage(images[sheet.image],s.x,s.y,s.w,s.h,Math.round(x),Math.round(y),size||s.w,size||s.h);}
+function sprite(type,id,x,y,size){const sheet=assets?.sprites[type],s=sheet?.ids[id];if(s&&graphics)graphics.draw(ctx,sheet.image,s.x,s.y,s.w,s.h,Math.round(x),Math.round(y),size||s.w,size||s.h);}
 function animation(name,x,y,time=(view==='game'?gameTicks:ticks),loop=true){
   const a=assets.animations[name];if(!a)return false;
   const n=Math.floor(time*(a.fps||12));const frame=a.frames[loop?n%a.frames.length:Math.min(a.frames.length-1,n)];
@@ -55,7 +60,7 @@ function buildButtons(){
   for(const b of buttons){const el=document.createElement('button');el.className='hotspot';el.textContent=b.label;el.setAttribute('aria-label',b.label);el.style.cssText=`left:${b.x/10.24}%;top:${b.y/7.68}%;width:${b.w/10.24}%;height:${b.h/7.68}%`;el.addEventListener('click',()=>action(b.action));el.addEventListener('pointerenter',()=>hover=b.action);el.addEventListener('pointerleave',()=>hover='');el.addEventListener('focus',()=>hover=b.action);el.addEventListener('blur',()=>hover='');hotspots.append(el);}
 }
 function renderTitle(){
-  if(images['assets/title-0.png'])ctx.drawImage(images['assets/title-0.png'],326,64);
+  if(graphics)graphics.draw(ctx,'assets/title-0.png',0,0,372,112,326,64,372,112);
   else text('PacMac Deluxe',512,61,36,'white','center');
   text('Version 1.3',512,205,14,'white','center');
   text('2,332 levels - 117 level files',512,224,14,'white','center');
@@ -100,7 +105,7 @@ function renderEditor(){
   for(const b of buttons)text(b.label,b.textX,b.textY,b.size,hover===b.action?'red':'white','center');
   text(`Tile: ${editor.tile} · ${editor.tiles.filter(isFood).length} food · Alt-click to pick a tile`,110,730,14);text('Draw with mouse or touch. Right-click erases.',110,747,14);
 }
-function render(){ctx.fillStyle='#000';ctx.fillRect(0,0,1024,768);if(view==='title')renderTitle();else if(view==='game')renderGame();else if(view==='scores')renderScores();else if(view==='about')renderAbout();else if(view==='editor')renderEditor();else if(view==='quit'){text('Thanks for playing!',512,310,36,'white','center');for(const b of buttons)text(b.label,b.textX,b.textY,b.size,hover===b.action?'red':'white','center');}}
+function render(){syncJoystick();ctx.fillStyle='#000';ctx.fillRect(0,0,1024,768);if(view==='title')renderTitle();else if(view==='game')renderGame();else if(view==='scores')renderScores();else if(view==='about')renderAbout();else if(view==='editor')renderEditor();else if(view==='quit'){text('Thanks for playing!',512,310,36,'white','center');for(const b of buttons)text(b.label,b.textX,b.textY,b.size,hover===b.action?'red':'white','center');}}
 function frame(now){const elapsed=Math.min((now-last)/1000||0,.1);last=now;ticks+=elapsed;if(view==='game'&&game.state!=='paused'&&!dialog.open)gameTicks+=elapsed;if(view==='game'&&!dialog.open){accumulator+=elapsed*(settings.speed/30);while(accumulator>=1/120){game.update(1/120,1/120/(settings.speed/30));accumulator-=1/120;}}else accumulator=0;flash=flash.filter(f=>(f.time-=elapsed)>0);render();requestAnimationFrame(frame);}
 function allSets(){return [...library.sets,...custom.map(s=>({...s,custom:true}))];}
 function play(){activeSet=allSets().find(s=>s.name===settings.set)||library.sets.find(s=>s.name==='Pac Levels')||library.sets[0];activeLevel=Math.min(settings.level,activeSet.levels.length-1);if(settings.random){activeSet=allSets()[Math.floor(Math.random()*allSets().length)];activeLevel=Math.floor(Math.random()*activeSet.levels.length);}view='game';editor=null;game.start(activeSet.levels[activeLevel],{setName:activeSet.name,levelNumber:activeLevel+1});startMusic(0);buildButtons();}
@@ -121,7 +126,7 @@ function preferences(){
 }
 function saveSettings(){save('pacmac.preferences',settings);audio.setSettings(settings);}
 function levelDialog(){const sets=allSets();showDialog('Choose Starting Level',`<label>Level file<select id="level-set">${sets.map(s=>`<option value="${escapeHTML(s.name)}" ${s.name===settings.set?'selected':''}>${escapeHTML(s.name)} (${s.levels.length})</option>`).join('')}</select></label><label>Starting level <input id="level-number" type="number" min="1" value="${settings.level+1}"></label><canvas id="level-preview" width="560" height="420"></canvas><label><input id="level-random" type="checkbox" ${settings.random?'checked':''}> Random play across all level files</label>`,[{label:'Cancel'},{label:'Play',run:()=>{settings.set=$('#level-set').value;const set=sets.find(s=>s.name===settings.set);settings.level=Math.max(0,Math.min(set.levels.length-1,(+$('#level-number').value||1)-1));settings.random=$('#level-random').checked;saveSettings();play();}}]);
-  const preview=()=>{const set=sets.find(s=>s.name===$('#level-set').value);$('#level-number').max=set.levels.length;const index=Math.max(0,Math.min(set.levels.length-1,(+$('#level-number').value||1)-1));const c=$('#level-preview').getContext('2d');c.fillStyle='#000';c.fillRect(0,0,560,420);const sheet=assets.sprites.Sprb;set.levels[index].forEach((t,i)=>{const s=sheet.ids[3999+t];if(t&&s)c.drawImage(images[sheet.image],s.x,s.y,s.w,s.h,(i%20)*28,Math.floor(i/20)*28,28,28);});};$('#level-set').onchange=preview;$('#level-number').oninput=preview;preview();
+  const preview=()=>{const set=sets.find(s=>s.name===$('#level-set').value);$('#level-number').max=set.levels.length;const index=Math.max(0,Math.min(set.levels.length-1,(+$('#level-number').value||1)-1));const c=graphics.prepare($('#level-preview'),560,420);c.fillStyle='#000';c.fillRect(0,0,560,420);const sheet=assets.sprites.Sprb;set.levels[index].forEach((t,i)=>{const s=sheet.ids[3999+t];if(t&&s)graphics.draw(c,sheet.image,s.x,s.y,s.w,s.h,(i%20)*28,Math.floor(i/20)*28,28,28);});};$('#level-set').onchange=preview;$('#level-number').oninput=preview;previewRefresh=preview;preview();
 }
 function openEditor(){editor={name:'My Levels',tiles:[...(activeSet?.levels[activeLevel]||library.sets.find(s=>s.name==='Pac Levels').levels[0])],tile:47,undo:[],testing:false};view='editor';buildButtons();}
 function download(name,contents){const url=URL.createObjectURL(new Blob([contents],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -162,12 +167,14 @@ function paint(e){if(view!=='editor'||dialog.open)return;const r=canvas.getBound
 canvas.addEventListener('pointerdown',e=>{audio.unlock();if(view==='editor'){drawing=true;editor.undo.push([...editor.tiles]);if(editor.undo.length>30)editor.undo.shift();canvas.setPointerCapture(e.pointerId);paint(e);}});canvas.addEventListener('pointermove',e=>{if(drawing)paint(e);});canvas.addEventListener('pointerup',()=>drawing=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());
 dialog.addEventListener('close',()=>dialogPaused=false);
 async function init(){
-  if(globalThis.__PACMAC_BUNDLE__){assets=globalThis.__PACMAC_BUNDLE__.assets;library=globalThis.__PACMAC_BUNDLE__.levels;}
-  else [assets,library]=await Promise.all(['data/assets.json','data/levels.json'].map(p=>fetch(p).then(r=>{if(!r.ok)throw Error('Could not load '+p);return r.json();})));
-  const urls=new Set([...Object.values(assets.sprites).map(s=>s.image),...Object.values(assets.fonts||{}).map(f=>f.image),'assets/title-0.png']);
-  await Promise.all([...urls].map(url=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[url]=img;resolve();};img.onerror=()=>reject(Error('Could not load '+url));img.src=globalThis.__PACMAC_BUNDLE__?.files[url]||url;})));
+  let report;
+  if(globalThis.__PACMAC_BUNDLE__){assets=globalThis.__PACMAC_BUNDLE__.assets;library=globalThis.__PACMAC_BUNDLE__.levels;report=globalThis.__PACMAC_BUNDLE__.graphics;}
+  else [assets,library,report]=await Promise.all(['data/assets.json','data/levels.json','data/enhanced.json'].map(p=>fetch(p).then(r=>{if(!r.ok)throw Error('Could not load '+p);return r.json();})));
+  graphics=new BitmapGraphics(report,globalThis.__PACMAC_BUNDLE__?.files);await graphics.load();
+  graphics.onChange=()=>{graphics.prepare(canvas,1024,768);if(dialog.open&&$('#level-preview'))previewRefresh?.();render();};
+  graphics.setMode(read('pacmac.graphics','enhanced')==='original'?'original':'enhanced');
   if(audio.load)await audio.load(assets.sounds);audio.setSettings(settings);startMusic(2);$('#loading').remove();buildButtons();requestAnimationFrame(frame);
-  window.pacmac={game,assets,library,action,getState:()=>({view,settings,score:game.score,lives:game.lives,state:game.state,player:game.player,food:game.food}),startLevel:(tiles)=>{view='game';game.start(tiles);buildButtons();},editor:()=>editor};
+  window.pacmac={game,assets,library,graphics,action,getState:()=>({view,settings,score:game.score,lives:game.lives,state:game.state,player:game.player,food:game.food}),startLevel:(tiles)=>{view='game';game.start(tiles);buildButtons();},editor:()=>editor};
 }
 init().catch(e=>{$('#loading').textContent='Unable to load PacMac Deluxe. '+e.message;console.error(e);});
 
